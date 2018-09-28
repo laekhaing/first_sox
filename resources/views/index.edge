@@ -1,0 +1,45 @@
+@layout('layout')
+
+@section('content')
+<div class="row">
+  <div class="col s12 m8 l6 offset-m2 offset-l3 z-depth-1 mt-3 white">
+    <div class="pa-2">
+      <h5>ログイン</h5>
+      @if(old('errors').length > 0)
+      <div class="red-text">
+        <p>{{ elIf('<span>$self</span>', getErrorFor('login_id'), hasErrorFor('login_id')) }}</p>
+        <p>{{ elIf('<span>$self</span>', getErrorFor('password'), hasErrorFor('password')) }}</p>
+      </div>
+      @endif
+
+      @if(old('error_message'))
+      <div class="red-text">
+        <p>{{ old('error_message') }}</p>
+      </div>
+      @endif
+
+      <form action="/login" method="POST" enctype="multipart/form-data">
+        {{ csrfField() }}
+        <div class="row">
+          <div class="input-field col s12">
+            <input placeholder="login id" id="login_id" name="login_id" type="text" class="validate" required>
+            <label for="login_id">ログインID</label>
+            <span class="helper-text" data-error="ログインIDを入力して下さい" data-success=""></span>
+          </div>
+          <div class="input-field col s12">
+            <input placeholder="password" id="password" name="password" type="password" class="validate" required>
+            <label for="password">パスワード</label>
+            <span class="helper-text" data-error="パスワードを入力して下さい" data-success=""></span>
+          </div>
+          <div class="col s12">
+            <button class="waves-effect waves-light  blue darken-3 btn w100">ログイン</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+@endsection
+
+@section('javascript')
+@endsection

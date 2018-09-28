@@ -1,0 +1,164 @@
+@layout('service/layout')
+
+@section('content')
+<div class="row">
+  <div class="col s12 z-depth-1 mt-3 white">
+    <div class="pa-2">
+      <h5>ファイルのアップロード</h5>
+      <p>音声ファイルを選択して、アップロードして下さい。</p>
+      @if(old('errors').length > 0)
+      <div class="red-text">
+        <p>{{ elIf('<span>$self</span>', getErrorFor('audio_name'), hasErrorFor('audio_name')) }}</p>
+        <p>{{ elIf('<span>$self</span>', getErrorFor('language'), hasErrorFor('language')) }}</p>
+      </div>
+      @endif
+      @if(old('error_message'))
+      <div class="red-text">
+        <p>{{ old('error_message') }}</p>
+      </div>
+      @endif
+      <form action="/service/convert" method="POST" enctype="multipart/form-data">
+        {{ csrfField() }}
+        <div class="row">
+        <p>{{ old('text', '') }}</p>
+          <div class="file-field input-field col s5">
+            <input placeholder="Placeholder" id="audio_name" name="audio_name" type="text" class="validate" required>
+            <label for="audio_name">名前</label>
+          </div>
+          <div class="file-field input-field mt-2">
+            <div class="btn input-field mt-3">
+              <span>音声</span>
+              <input type="file" name="audio" required>
+            </div>
+            <div class="file-path-wrapper input-field col s5">
+              <input class="file-path validate" type="text">
+            </div>
+            <div lass="file-field input-field mt-3">
+            <button class="mt-3 waves-effect waves-light  blue darken-3 btn w15"> アップロード </button>
+            </div>
+        </div>
+        <div class="file-field input-field col s4">※アップロード量大ファイルサイズ200MByte</div>
+      </form>
+    </div>
+  </div>
+  </div>
+  <div class="col s12 z-depth-1 white mt-3">
+    <table>
+      <thead>
+      <tr>
+        <td colspan="2"><h5>音声テキスト変換</h5></td>
+        <td colspan="2"><font size="2">変換ボタンを押すと音声ファイルからテキストを作成します。</font></td>
+        <td class="center-align">
+        合計 : {{ totalFileSize }} MByte
+        </td>
+        <td colspan="3"></td>
+      </tr>
+      <tr>
+        <th class="center-align">音声名</th>
+        <th class="center-align">ステータス</th>
+        <th class="center-align">投入時間</th>
+        <th class="center-align">音声時間</th>
+        <th class="center-align">音声ファイル</th>
+        <th colspan="2"></th>
+      </tr>
+      </thead>
+      <tbody>
+      @each(audio in audioList)
+      <tr>
+        <td class="center-align">{{ audio.name }}</td>
+        <td class="center-align" data-id="{{ audio.id }}">
+          @if(audio.status === 0)
+          未変換
+          @elseif(audio.status === 2)
+          変換中
+          @elseif(audio.status === 1)
+          変換完了
+          @else
+          失敗
+          @endif
+        </td>
+        <td class="center-align">{{ audio.created_at }}</td>
+        <td class="center-align">{{ audio.file_duration }} 秒　</td>
+        <td class="center-align">{{ audio.file_size }} MByte</td>
+          <td class="center-align" colspan="2" width="20%">
+          <form action="/service/trimAudio" method="POST" enctype="multipart/form-data">
+            {{ csrfField() }}
+          <div class="input-field col s5">
+            <select name="language" required>
+              <option value="ja" selected>日本語</option>
+              <option value="en">英語</option>
+            </select>
+            <label>言語選択</label>
+          </div>
+          <div class="input-field col s6">
+          <input type="hidden" name="id" value="{{ audio.id }}">
+          <button class="mt-1 waves-effect waves-light  blue darken-3 btn w100"> 変換 </button>
+          </div>
+          </td>
+        </form>
+        <td class="center-align" colspan="2" width="20%">
+          <div class="input-field col s3">
+          <a href="/service/audio/{{ audio.id }}/download" class="waves-effect btn-flat">
+            <i class="mdi mdi-audiobook mdi-24px blue-text text-darken-2 tooltipped" data-position="top" data-tooltip="音声"></i>
+          </a>
+          </div>
+          <div class="input-field col s3">
+          @if(audio.status === 0)
+          <a href="/service/audio/{{ audio.id }}/text_download" class="waves-effect btn-flat">
+            <i class="mdi mdi-note-text mdi-24px orange-text text-lighten-3 tooltipped" data-position="top" data-tooltip="テキスト"></i>
+          </a>
+          @elseif(audio.status === 2)
+          <a href="/service/audio/{{ audio.id }}/text_download" class="waves-effect btn-flat">
+            <i class="mdi mdi-note-text mdi-24px orange-text text-lighten-3 tooltipped" data-position="top" data-tooltip="テキスト"></i>
+          </a>
+          @elseif(audio.status === 1)
+          <a href="/service/audio/{{ audio.id }}/text_download" class="waves-effect btn-flat">
+            <i class="mdi mdi-note-text mdi-24px orange-text text-darken-3 tooltipped" data-position="top" data-tooltip="テキスト"></i>
+          </a>
+          @else
+          <a href="/service/audio/{{ audio.id }}/text_download" class="waves-effect btn-flat">
+            <i class="mdi mdi-note-text mdi-24px orange-text text-lighten-3 tooltipped" data-position="top" data-tooltip="テキスト"></i>
+          </a>
+          @endif
+          </div>
+            <div class="input-field col s3">
+          <a href="/service/audio/{{ audio.id }}/delete" class="waves-effect btn-flat">
+            <i class="mdi mdi-delete mdi-24px red-text text-darken-3 tooltipped" data-position="top" data-tooltip="削除"></i>
+          </a>
+          </div>
+        </td>
+      </tr>
+      @endeach
+      </tbody>
+    </table>
+  </div>
+</div>
+@endsection
+
+@section('javascript')
+<script src="https://cdn.jsdelivr.net/npm/babel-regenerator-runtime@6.5.0/runtime.js"></script>
+<script src="https://unpkg.com/@adonisjs/websocket-client"></script>
+<script>
+  const ws = adonis.Ws('ws://localhost:3333')
+  const fileStatus = ws.subscribe('file-status:checker')
+
+  fileStatus.on('message', function (m) {
+    const d = JSON.parse(m)
+    const elm = document.querySelector('[data-id="' + d.id + '"]')
+    elm.innerText = d.status
+  })
+
+  ws.connect()
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var elems = document.querySelectorAll('select');
+    var instances = M.FormSelect.init(elems);
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var elems = document.querySelectorAll('.tooltipped');
+    var instances = M.Tooltip.init(elems, options);
+  });
+
+</script>
+@endsection

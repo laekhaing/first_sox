@@ -1,0 +1,133 @@
+@layout('service/layout')
+
+@section('content')
+<div class="row">
+  <div class="col s12 z-depth-1 mt-3 white">
+    <div class="pa-2">
+      <h5>音声テキスト変換</h5>
+      <p>音声ファイルを選択して、変換ボタンを押して下さい。</p>
+      @if(old('errors').length > 0)
+      <div class="red-text">
+        <p>{{ elIf('<span>$self</span>', getErrorFor('audio_name'), hasErrorFor('audio_name')) }}</p>
+        <p>{{ elIf('<span>$self</span>', getErrorFor('language'), hasErrorFor('language')) }}</p>
+      </div>
+      @endif
+
+      @if(old('error_message'))
+      <div class="red-text">
+        <p>{{ old('error_message') }}</p>
+      </div>
+      @endif
+
+      <form action="/service/convert" method="POST" enctype="multipart/form-data">
+        {{ csrfField() }}
+        <div class="row">
+          <div class="input-field col s12">
+            <input placeholder="Placeholder" id="audio_name" name="audio_name" type="text" class="validate" required>
+            <label for="audio_name">名前</label>
+          </div>
+          <div class="input-field col s12">
+            <select name="language" required>
+              <option value="" disabled selected>音声の言語を選択してください</option>
+              <option value="ja">日本語</option>
+              <option value="en">英語</option>
+            </select>
+            <label>言語選択</label>
+          </div>
+        </div>
+        <div class="file-field input-field mt-3">
+          <div class="btn">
+            <span>音声</span>
+            <input type="file" name="audio" required>
+          </div>
+          <div class="file-path-wrapper">
+            <input class="file-path validate" type="text">
+          </div>
+          <div class="input-field col s4">
+          <label>
+            <input type="checkbox" name="cloud_service" value="gcp"/>
+            <span>GCP</span>
+          </label>
+          </div>
+          <div class="input-field col s4">
+          <label>
+            <input type="checkbox" name="cloud_service" value="azure"/>
+            <span>AWS</span>
+          </label>
+          </div>
+          <div class="input-field col s4">
+          <label>
+            <input type="checkbox" name="cloud_service" value="aws"/>
+            <span>Azure</span>
+          </label>
+          </div>
+        </div>
+
+        <p>{{ old('text', '') }}</p>
+
+        <button class="mt-3 waves-effect waves-light  blue darken-3 btn w100">変換</button>
+      </form>
+    </div>
+  </div>
+  <div class="col s12 z-depth-1 white mt-3">
+    <table>
+      <thead>
+      <tr>
+        <th>音声名</th>
+        <th>ステータス</th>
+        <th>投入時間</th>
+        <th></th>
+      </tr>
+      </thead>
+
+      <tbody>
+      @each(audio in audioList)
+      <tr>
+        <td>{{ audio.name }}</td>
+        <td data-id="{{ audio.id }}">
+          @if(audio.status === 0)
+          変換中
+          @elseif(audio.status === 1)
+          変換完了
+          @else
+          失敗
+          @endif
+        </td>
+        <td>{{ audio.created_at }}</td>
+        <td class="right-align">
+          <a href="/service/audio/{{ audio.id }}/download" class="waves-effect btn-flat">
+            <i class="mdi mdi-audiobook mdi-24px blue-text text-darken-2"></i>
+          </a>
+          <a href="/service/audio/{{ audio.id }}/text_download" class="waves-effect btn-flat">
+            <i class="mdi mdi-note-text mdi-24px orange-text text-darken-3"></i>
+          </a>
+        </td>
+      </tr>
+      @endeach
+      </tbody>
+    </table>
+  </div>
+</div>
+@endsection
+
+@section('javascript')
+<script src="https://cdn.jsdelivr.net/npm/babel-regenerator-runtime@6.5.0/runtime.js"></script>
+<script src="https://unpkg.com/@adonisjs/websocket-client"></script>
+<script>
+  const ws = adonis.Ws('ws://localhost:3333')
+  const fileStatus = ws.subscribe('file-status:checker')
+
+  fileStatus.on('message', function (m) {
+    const d = JSON.parse(m)
+    const elm = document.querySelector('[data-id="' + d.id + '"]')
+    elm.innerText = d.status
+  })
+
+  ws.connect()
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var elems = document.querySelectorAll('select');
+    var instances = M.FormSelect.init(elems);
+  });
+</script>
+@endsection

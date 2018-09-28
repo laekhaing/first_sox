@@ -2,7 +2,7 @@
 If you access `google-speech-api`, you should be register `GOOGLE_APPLICATION_CREDENTIALS` with environment variable.  
 You can see document in this page `https://cloud.google.com/video-intelligence/docs/common/auth`.
 
-### How to start simple-app
+### How to start sox-project
 
 ```bash
 # 1. This application (hereinafter, this is called "simpleApp") require 'adonis-cli'. If you have not installed 'adonis-cli', please install it.
